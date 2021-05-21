@@ -15,6 +15,7 @@ from urllib.request import urlopen
 from PIL import Image
 
 
+
 id_list = {'maxl1245#8177': '218495855',
           'DarkSoules#8541': '290164262',
           'AskoldoFFF#6716': '387772909'}
@@ -185,7 +186,7 @@ async def points(ctx, *args):
     
     # black or white
     lst = []
-    koef = 128
+    koef = image.mean()
     if len(args) > 0:
         koef = int(args[0])
         
