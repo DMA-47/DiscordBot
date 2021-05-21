@@ -163,46 +163,110 @@ async def points(ctx, *args):
         width, height = resized_image.size
         print('The resized image size is {wide} wide x {height} high'.format(wide=width, height=height))
         resized_image.save(output_image_path)
+    
+    def create_koefs(koef):
+        maxk = 256
+        res = np.zeros(4)
+        num1 = koef / 2.5
+        num2 = (maxk - koef) / 2.5
+        
+        res[0] = num1
+        res[1] = num1 * 2
+        res[2] = res[1] + (num1 / 2) + (num2 / 2)
+        res[3] = res[2] + num2
+        
+        return res    
         
     url = ctx.message.attachments[0].url
     print(url)
+    
     # downolad img
     braile = '⠁⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿'
-
+    way = 'D:\\DiscordBot\\png\\img.'
 
     p = requests.get(url)
-    out = open('D:\\DiscordBot\\png\\img.png', "wb")
+    out = open(way + 'png', "wb")
     out.write(p.content)
     out.close()
 
-    im = Image.open('D:\\DiscordBot\\png\\img.png')
+    im = Image.open(way + 'png')
     rgb_im = im.convert('RGB')
-    rgb_im.save('D:\\DiscordBot\\png\\img.jpg')
+    rgb_im.save(way + 'jpg')
 
-    resize_image('D:\\DiscordBot\\png\\img.jpg', 'D:\\DiscordBot\\png\\img.jpg')
+    resize_image(way + 'jpg', way + 'jpg')
 
-    with cbook.get_sample_data('D:\\DiscordBot\\png\\img.jpg') as image_file:
+    with cbook.get_sample_data(way + 'jpg') as image_file:
         image = plt.imread(image_file)
+    
+    image = image[0:len(image)-(len(image)%4)]
+    image = image[:, 0:len(image[0])-(len(image[0])%2)]
+    height, width = image.shape[0], image.shape[1]
     
     # black or white
     lst = []
-    koef = image.mean()
+    metod = 1
     if len(args) > 0:
-        koef = int(args[0])
+        metod = int(args[0])
         
-    for i in range(len(image)):
-        lst.append([])
-        for j in range(len(image[i])):
-            mean = np.mean(image[i][j])
-            if mean > koef:
-                lst[i].append(0)
-            else:
-                lst[i].append(1)
+    koef = image.mean()
+    if len(args) > 1:
+        koef = int(args[1])
+        
+    if metod == 1:  
+        koefs = create_koefs(koef)
+        print(koefs)
+        for i in range(0, height, 2):
+            lst.append([])
+            lst.append([])
+            for j in range(0, width, 2):
+                means = np.array([np.mean(image[i][j]), np.mean(image[i][j + 1]), np.mean(image[i + 1][j]), np.mean(image[i + 1][j + 1])]) 
+                mean = np.mean(means)
+                
+                if mean < koefs[0]: # 4
+                    lst[i].append(1)
+                    lst[i].append(1)
+                    lst[i + 1].append(1)
+                    lst[i + 1].append(1)
+                elif mean < koefs[1]: # 3
+                    index = means.argmax()
+                    lst[i].append(0 if index == 0 else 1)
+                    lst[i].append(0 if index == 1 else 1)
+                    lst[i + 1].append(0 if index == 2 else 1)
+                    lst[i + 1].append(0 if index == 3 else 1)
+                    
+                elif mean < koefs[2]: # 2
+                    index1 = means.argmax()
+                    means[index1] = 0
+                    index2 = means.argmax()
+                    lst[i].append(0 if index1 == 0 or index2 == 0 else 1)
+                    lst[i].append(0 if index1 == 1 or index2 == 1 else 1)
+                    lst[i + 1].append(0 if index1 == 2 or index2 == 2 else 1)
+                    lst[i + 1].append(0 if index1 == 3 or index2 == 3 else 1)
+                    
+                elif mean < koefs[3]: # 1
+                    index = means.argmin()
+                    lst[i].append(1 if index == 0 else 0)
+                    lst[i].append(1 if index == 1 else 0)
+                    lst[i + 1].append(1 if index == 2 else 0)
+                    lst[i + 1].append(1 if index == 3 else 0)
+                    
+                else: # 0
+                    lst[i].append(0)
+                    lst[i].append(0)
+                    lst[i + 1].append(0)
+                    lst[i + 1].append(0)
+    else:
+        for i in range(height):
+            lst.append([])
+            for j in range(width):
+                mean = np.mean(image[i][j])
+                if mean > koef:
+                    lst[i].append(0)
+                else:
+                    lst[i].append(1)
 
     lst = np.array(lst)
-    lst = lst[0:len(lst)-(len(lst)%4)]
-    lst = lst[:, 0:len(lst[0])-(len(lst[0])%2)]
-    print(lst)
+
     # create msg
     msg = ''
 
@@ -224,7 +288,6 @@ async def points(ctx, *args):
                 
             msg += braile[num]
         msg += '\n'
-    print(msg)
     await ctx.send(msg)
     
 bot.run(settings['token']) # Обращаемся к словарю settings с ключом token, для получения токена
