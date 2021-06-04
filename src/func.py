@@ -65,16 +65,22 @@ def dotastat_msg(ctx, num_game):
     return f'`{tabulate(table)}`'
 
 
-def anekdot_msg():
-    html = requests.get("https://baneks.site/random", headers={'User-agent': 'your bot 0.1'}).text
-    soup = BeautifulSoup(html, 'html5lib')
-    split_1 = str(soup('section')[0]).split('<')[2:-2]
-    split_2 = [i.split('>')[1] for i in split_1]
-    msg = ''
-    for line in split_2:
-        msg += line + '\n'
+def anekdot_msg(length):
+    max_len = 199
+
+    while True:
+        msg = ''
+        html = requests.get("https://baneks.site/random", headers={'User-agent': 'your bot 0.1'}).text
+        soup = BeautifulSoup(html, 'html5lib')
+        split_1 = str(soup('section')[0]).split('<')[2:-2]
+        split_2 = [i.split('>')[1] for i in split_1]
+        for line in split_2:
+            msg += line + '\n'
+        if length == 'normal' or (length == 'small' and len(msg) < max_len) or (length == 'big' and len(msg) > max_len):
+            break
+
     print(msg)
-    if len(msg) > 198:
+    if len(msg) > max_len:
         ind_tts = False
     else:
         ind_tts = True

@@ -2,7 +2,7 @@
 # 1
 from discord.ext import commands, tasks
 from discord_slash import SlashCommand
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_choice
 from config import settings
 from func import *
 
@@ -65,14 +65,37 @@ async def chill_slash(ctx):
 
 
 @bot.command()
-async def anekdot(ctx):
-    msg, ind = anekdot_msg()
+async def anekdot(ctx, length='normal'):
+    msg, ind = anekdot_msg(length)
     await ctx.send(msg, tts=ind)
 
 
-@slash.slash(name="anekdot", description="Бот расскажет ахуенный анекдот")
-async def anekdot_slash(ctx):
-    msg, ind = anekdot_msg()
+@slash.slash(name="anekdot", description="Бот расскажет ахуенный анекдот",
+             options=[
+                 create_option(
+                     name="length",
+                     description="Розмер анекдота",
+                     option_type=3,
+                     required=False,
+                     choices=[
+                         create_choice(
+                             name="Любой размер",
+                             value="normal"
+                         ),
+                         create_choice(
+                             name="Малый размер (зачитает вслух)",
+                             value="small"
+                         ),
+                         create_choice(
+                             name="Большой размер (нихуя не зачитает)",
+                             value="big"
+                         )
+                     ]
+                 )
+             ])
+async def anekdot_slash(ctx, length='normal'):
+    print(length)
+    msg, ind = anekdot_msg(length)
     await ctx.send(msg, tts=ind)
 
 
