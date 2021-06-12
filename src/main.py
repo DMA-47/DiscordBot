@@ -1,11 +1,14 @@
 # -*- coding: utf8 -*-
 # 1
+import sys
+sys.path.insert(0, 'D:/DiscordToken')
+import discord
 from discord.ext import commands, tasks
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option, create_choice
 from config import settings
 from func import *
-
+from datetime import timedelta as td
 
 
 list2 = {'Іван Мазепа#8567': 'Руся лох'}
@@ -117,6 +120,15 @@ async def points(ctx, metod=1, koef=-1):
                  required=False)])
 async def points_slash(ctx, metod=1, koef=-1):
     await ctx.send(points_msg(ctx, metod, koef))
+
+
+
+@bot.command()
+async def weather(ctx, time1='', time2=''):
+    msg, file = weather_msg(ctx, time1, time2)
+    print(msg)
+    await ctx.send(msg, file=file)
+    # await ctx.send(123, file=discord.File('D:\\DiscordBot\\gifs\\gif1.gif'))
 
 
 bot.run(settings['token'])  # Обращаемся к словарю settings с ключом token, для получения токена
