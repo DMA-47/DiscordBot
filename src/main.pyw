@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 # 1
+import sys
+sys.path.insert(0, 'D:/DiscordToken')
 import discord
 from discord.ext import commands, tasks
 from discord_slash import SlashCommand

@@ -239,38 +239,39 @@ def get_time(time):
     return hm[0], hm[1]
 
 
-def create_weather_gif(time1, time2, folder):
+def create_weather_gif(time, folder):
     msg = ''
-    delta = td(hours=2)
+    first_id = 0
+    num_img = 17
     data2 = dt.today()
-    if len(time2) > 0:
-        delta = dt.strptime(time2, '%H:%M') - dt.strptime(time1, '%H:%M')
-        h2, m2 = get_time(time2)
-        d = 0
-        if h2 > data2.hour:
-            d = 1
-        data2 -= td(days=d, hours=data2.hour, minutes=data2.minute) - td(hours=h2, minutes=m2)
-    elif len(time1) > 0:
-        h1, m1 = get_time(time1)
+
+    html = requests.get("https://meteo.gov.ua/ua/33345/radar", headers={'User-agent': 'your bot 0.1'},
+                        verify=False).text
+    soup = BeautifulSoup(html, 'html5lib')
+    data_range = [[line.get('value'), line.text] for line in soup('option')]
+
+    if len(time) > 0:
+        h1, m1 = get_time(time)
         d = 0
         if h1 > data2.hour:
             d = 1
-        data2 -= td(days=d, hours=data2.hour, minutes=data2.minute) - td(hours=h1, minutes=m1)
-    else:
-        data2 -= td(minutes=40)
+        data2 -= td(days=d, hours=data2.hour, minutes=data2.minute) - td(hours=h1, minutes=m1) + td(hours=3)
+        for i in range(len(data_range)):
+            data_i = dt.strptime(data_range[i][0], '%Y-%m-%d %H-%M-%S')
+            if data_i < data2:
+                first_id = i
+                break
 
-    data1 = data2 - delta
-    print(data1, data2)
-    msg += data1.strftime('%H:%M:00') + ' - ' + data2.strftime('%H:%M:00')
-    data2 -= td(minutes=(data2.minute % 10 + 1), hours=3)
-    data1 -= td(minutes=(data1.minute % 10 + 1), hours=3)
-    print(data1, data2)
+    last_id = first_id + num_img
+    # print(data2)
+    msg += data_range[last_id][1] + ' - ' + data_range[first_id][1]
 
     images = []
     filename = 'D:\\DiscordBot\\png\\weather.png'
-    while data1 < data2:
-        url = 'https://meteo.gov.ua/radars/Ukr_J%2020' + data1.strftime('%y-%m-%d') + '%20' + data1.strftime('%H-%M-00') + '.jpg'
-        print(url)
+    for i in range(last_id, first_id, -1):
+        data_i = data_range[i][0].split()
+        url = 'https://meteo.gov.ua/radars/Ukr_J%20' + data_i[0] + '%20' + data_i[1] + '.jpg'
+        # print(url)
         p = requests.get(url, verify=False)
         out = open(filename, "wb")
         out.write(p.content)
@@ -278,14 +279,21 @@ def create_weather_gif(time1, time2, folder):
 
         for _ in range(1):
             images.append(imageio.imread(filename))
-        data1 += td(minutes=10)
+
     imageio.mimsave(folder, images)
     return msg
 
 
-
-def weather_msg(ctx, time1, time2):
-    folder = 'D:\\DiscordBot\\gifs\\weather.gif'
-    msg = create_weather_gif(time1, time2, folder)
-    return msg, discord.File(folder)
+def weather_msg(ctx, time):
+    folder_gif = 'D:\\DiscordBot\\gifs\\weather.gif'
+    folder_info = 'D:\\DiscordBot\\png\\weather_info.png'
+    folder_shuiali = 'D:\\DiscordBot\\png\\weather_shuiali.png'
+    print(time)
+    if time == 'info':
+        return 'Info:', discord.File(folder_info)
+    elif time == 'схуяли.задержка.40.минут?':
+        return 'Info:', discord.File(folder_shuiali)
+    else:
+        msg = create_weather_gif(time, folder_gif)
+        return msg, discord.File(folder_gif)
 

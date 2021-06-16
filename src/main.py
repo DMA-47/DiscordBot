@@ -1,22 +1,23 @@
 # -*- coding: utf8 -*-
 # 1
 import sys
+import time
+
 sys.path.insert(0, 'D:/DiscordToken')
-import discord
+
 from discord.ext import commands, tasks
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option, create_choice
 from config import settings
 from func import *
-from datetime import timedelta as td
 
 
 list2 = {'Іван Мазепа#8567': 'Руся лох'}
 
 
 bot = commands.Bot(command_prefix=settings['prefix'])
-#slash = SlashCommand(bot, sync_commands=True)
-slash = SlashCommand(bot)
+slash = SlashCommand(bot, sync_commands=True)
+#slash = SlashCommand(bot)
 
 
 @bot.command()
@@ -122,13 +123,23 @@ async def points_slash(ctx, metod=1, koef=-1):
     await ctx.send(points_msg(ctx, metod, koef))
 
 
-
 @bot.command()
-async def weather(ctx, time1='', time2=''):
-    msg, file = weather_msg(ctx, time1, time2)
-    print(msg)
+async def weather(ctx, time1=''):
+    msg, file = weather_msg(ctx, time1)
     await ctx.send(msg, file=file)
-    # await ctx.send(123, file=discord.File('D:\\DiscordBot\\gifs\\gif1.gif'))
+
+
+@slash.slash(name="weather", description="Информация про погоду с радара", options=[
+               create_option(
+                 name="time1",
+                 description="Время в формате (ЧЧ:ММ) или \'info\' для получения легенды",
+                 option_type=3,
+                 required=False
+               )])
+async def weather_slash(ctx, time1=''):
+    await ctx.defer()
+    msg, file = weather_msg(ctx, time1)
+    await ctx.send(msg, file=file)
 
 
 bot.run(settings['token'])  # Обращаемся к словарю settings с ключом token, для получения токена
