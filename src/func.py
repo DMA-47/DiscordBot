@@ -1,3 +1,6 @@
+import math
+import textwrap
+
 import discord
 import random
 import requests
@@ -6,15 +9,22 @@ from tabulate import tabulate
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime as dt
 from datetime import timedelta as td
 import imageio
 
 chill_list = [
-    'Ты чего такой злой :rage: :rage: братишка?\nЗабомби дарксайдика поплотнее :smirk: :dash: для\nуспокоения :relaxed: :relaxed: накумарит так, что\nкайфанешь :drooling_face: :drooling_face: сразу подобреешь :innocent: :innocent: \nпроверено) :grinning: :point_up_2:',
-    'Братулец, не злись :smiling_imp: лучше пыхни\nколяндуполы :dash: и плохое настроение как\nрукой :thumbsup: снимет на хороший покур и \nсолнце  :sun_with_face: ярче и небо :milky_way: яснее  :stuck_out_tongue_winking_eye: дыши \nполной жизню, живи яркой грудью :face_with_monocle:',
-    'Братка :point_up:, че за агресия(agression):disappointed:\nпопыхти :wind_blowing_face: калумбаху два яблочка :apple: :green_apple: и \nрасслабся :smiling_imp: :kissing_heart: \nДым твоему дому  :house: брат']
+    'Ты чего такой злой :rage: :rage: братишка?\nЗабомби дарксайдика поплотнее :smirk: :dash: для\nуспокоения '
+    ':relaxed: :relaxed: накумарит так, что\nкайфанешь :drooling_face: :drooling_face: сразу подобреешь :innocent: '
+    ':innocent: \nпроверено) :grinning: :point_up_2:',
+
+    'Братулец, не злись :smiling_imp: лучше пыхни\nколяндуполы :dash: и плохое настроение как\nрукой :thumbsup: '
+    'снимет на хороший покур и \nсолнце  :sun_with_face: ярче и небо :milky_way: яснее  '
+    ':stuck_out_tongue_winking_eye: дыши \nполной жизню, живи яркой грудью :face_with_monocle:',
+
+    'Братка :point_up:, че за агресия(agression):disappointed:\nпопыхти :wind_blowing_face: калумбаху два яблочка '
+    ':apple: :green_apple: и \nрасслабся :smiling_imp: :kissing_heart: \nДым твоему дому  :house: брат']
 
 id_list = {'maxl1245#8177': '218495855',
            'DarkSoules#8541': '290164262',
@@ -26,16 +36,97 @@ def chill_msg():
     return random.choice(chill_list)
 
 
-def hello_msg(ctx):
+def hello_msg(ctx, name):
     author = ctx.author
-    if str(author) == 'Іван Мазепа#8567':
-        return 'Руся лох'
-    elif str(author) == 'DarkSoules#8541':
-        return 'Добрый день господин!\nhttps://tenor.com/view/youre-welcome-pleasure-keanu-reeves-its-a-pleasure-thank-you-gif-18395277'
-    elif str(author) == 'Хомячок💀Backstab💀#0110':
-        return 'Доров ВИТЮША'
+    folder_in = 'D:/DiscordBot/png/нупривет.jpg'
+    folder_out = 'D:/DiscordBot/png/нупривет2.jpg'
+    folder_save = 'D:/DiscordBot/save/hello.txt'
+    msg = ''
+    names = []
+    f = open(folder_save, 'r', encoding='utf-8')
+    for line in f:
+        if len(line) > 3:
+            names.append(line.strip().split('|'))
+    f.close()
+
+    text1 = 'НУ ПРИВЕТ'
+    text2 = str(author.name)
+    if len(name) == 0:
+        for line in names:
+            if line[0] == str(author):
+                text1 = line[1]
+                text2 = line[2]
+                break
+    elif name[0] == '!':
+        ind = 0
+        for line in names:
+            if line[0] == str(author):
+                ind = 1
+                text1 = line[1]
+                text2 = line[2] = name[1:]
+                break
+
+        if ind == 0:
+            text2 = name[1:]
+            names.append([str(author), text1, text2])
+
+        f = open(folder_save, 'w', encoding='utf-8')
+        for line in names:
+            f.write(line[0] + '|' + line[1] + '|' + line[2] + '\n')
+        f.close()
     else:
-        return f'Пошел нахуй , {author.mention}!'
+        text2 = name
+
+
+
+    im = Image.open(folder_in)
+    # Создаем объект со шрифтом
+    font = ImageFont.truetype('D:/DiscordBot/font/impact2.ttf', size=50)
+    draw_text = ImageDraw.Draw(im)
+
+    w_name, h_name = draw_text.textsize(text1, font=font)
+    x_name = (600 - w_name) / 2
+    y_name = 25
+    draw_text.text(
+        (x_name, y_name),
+        text1,
+        font=font,
+        fill='white',
+        stroke_width=2,
+        stroke_fill='black')
+
+    text2_lines = textwrap.wrap(text2, 22)
+    if len(text2_lines) > 8:
+        kof = math.sqrt(len(text2_lines) / 7.5)
+        font = ImageFont.truetype('D:/DiscordBot/font/impact2.ttf', size=int(50 / kof))
+        text2_lines = textwrap.wrap(text2, int(22 * kof))
+
+    y_name = 575
+
+    for i in text2_lines[::-1]:
+        w_name, h_name = draw_text.textsize(i, font=font)
+        x_name = (600 - w_name) / 2
+        y_name = y_name - h_name
+        draw_text.text(
+            (x_name, y_name),
+            i,
+            font=font,
+            fill='white',
+            stroke_width=2,
+            stroke_fill='black')
+        im.save(folder_out)
+
+    return msg, discord.File(folder_out)
+
+    # if str(author) == 'Іван Мазепа#8567':
+    #     return 'Руся лох'
+    # elif str(author) == 'DarkSoules#8541':
+    #     return 'Добрый день господин!\nhttps://tenor.com/view/youre-welcome-pleasure-keanu-reeves-its-a-pleasure' \
+    #            '-thank-you-gif-18395277 '
+    # elif str(author) == 'Хомячок💀Backstab💀#0110':
+    #     return 'Доров ВИТЮША'
+    # else:
+    #     return f'Пошел нахуй , {author.mention}!'
 
 
 def dotastat_msg(ctx, num_game):
@@ -126,8 +217,10 @@ def points_msg(ctx, metod, koef):
     url = ctx.message.attachments[0].url
     print(url)
 
-    # downolad img
-    braile = '⠁⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿'
+    # download img
+    braile = '⠁⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗'\
+             '⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰'\
+             '⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿ '
     way = 'D:\\DiscordBot\\png\\img.'
 
     p = requests.get(url)

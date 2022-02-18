@@ -4,15 +4,11 @@ import sys
 import time
 
 sys.path.insert(0, 'D:/DiscordToken')
-
 from discord.ext import commands, tasks
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option, create_choice
 from config import settings
 from func import *
-
-
-list2 = {'Іван Мазепа#8567': 'Руся лох'}
 
 
 bot = commands.Bot(command_prefix=settings['prefix'])
@@ -21,13 +17,15 @@ slash = SlashCommand(bot, sync_commands=True)
 
 
 @bot.command()
-async def hello(ctx):
-    await ctx.send(hello_msg(ctx))
+async def hello(ctx, name=''):
+    msg, file = hello_msg(ctx, name)
+    await ctx.send(msg, file=file)
 
 
 @slash.slash(name='hello', description='Бот поприветствует вас')
-async def hello_slash(ctx):
-    await ctx.send(hello_msg(ctx))
+async def hello_slash(ctx, name=''):
+    msg, file = hello_msg(ctx, name)
+    await ctx.send(msg, file=file)
 
 
 @bot.command()
